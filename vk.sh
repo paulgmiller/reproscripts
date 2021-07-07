@@ -3,19 +3,19 @@ set -ex
 
 #set up some parameters/defaults
 export s="c1089427-83d3-4286-9f35-5af546a6eb67"
-export rg="paulvk"
+export rg="paulvkj"
 export l="westcentralus"
-export vnet="paulnetF"
-export c="bugbashF"
+export vnet="paulnetJ"
+export c="bugbashJ"
 
-#az group create --location $l --name $rg
-#az configure --defaults group=$rg 
-#az account set -s $s
+az group create --location $l --name $rg
+az configure --defaults group=$rg 
+az account set -s $s
 
 #Create our two subnet network
-#az network vnet create -g $rg --name $vnet --address-prefixes 10.0.0.0/8 -o none
-#az network vnet subnet create -g $rg --vnet-name $vnet --name vms --address-prefixes 10.240.0.0/16 -o none
-#az network vnet subnet create -g $rg --vnet-name $vnet --name vk --address-prefixes 10.241.0.0/16 
+az network vnet create -g $rg --name $vnet --address-prefixes 10.0.0.0/8 -o none
+az network vnet subnet create -g $rg --vnet-name $vnet --name vms --address-prefixes 10.240.0.0/16 -o none
+az network vnet subnet create -g $rg --vnet-name $vnet --name vk --address-prefixes 10.241.0.0/16 
 
 
 #create cluster
