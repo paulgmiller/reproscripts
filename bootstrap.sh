@@ -74,7 +74,15 @@ git config --global url."https://dev.azure.com/msazure/".insteadof \
 
 
 
-#go proxy  
+#go proxy
+go install github.com/paulgmiller/azgoproxycreds@latest then
+azgoproxycreds # when ever you need an updated token. 
+
+# Add to bashrc/zshrc 
+export GOPROXY="https://goproxyprod.goms.io"
+export GOPRIVATE="goms.io/aks/*,go.goms.io/aks/*,go.goms.io/caravel,go.goms.io/fleet*"
+export GONOPROXY=none
+export __AKS_DOCKER_BUILD_MOUNT_NETRC=1  # Set this so that container builds work with your .netrc  
 
 #zsh omyzsh is more personal prefernce
 sudo apt install zsh
