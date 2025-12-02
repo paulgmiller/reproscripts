@@ -2,24 +2,28 @@ set -ex
 #az extension add --name aks-preview
 
 #set up some parameters/defaults
-export s="c1089427-83d3-4286-9f35-5af546a6eb67"
-export rg="paulbash8"
-export l="westus2"
-export vnet="paulnet1"
-export c="bugbash1"
+export s="8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8"
+export l="$1"
+export rg="podsubnet$l"
+export vnet="paulnet"
+export c="podsubnet$2"
 
+az account set -s $s
 az group create --location $l --name $rg
 az configure --defaults group=$rg 
-az account set -s $s
 
-#Create nat gateway and put it on our subnet
-az network public-ip create   --resource-group $rg --name natpublicip --sku standard 
-az network nat gateway create --resource-group $rg --name natgateway --public-ip-addresses /subscriptions/$s/resourceGroups/$rg/providers/Microsoft.Network/publicIPAddresses/natpublicip
+#Create our two subnet network
 az network vnet create -g $rg --name $vnet --address-prefixes 10.0.0.0/8 -o none
-az network vnet subnet create -g $rg --vnet-name $vnet --name nat --address-prefixes 10.240.0.0/16 -o none
-az network vnet subnet update --resource-group $rg --vnet-name $vnet --name nat  --nat-gateway natgateway
+az network nat gateway create -g $rg -n $vnet-gateway -l $l
+az network vnet subnet create -g $rg --vnet-name $vnet --name vms --address-prefixes 10.240.0.0/16 -o none
+az network vnet subnet create -g $rg --vnet-name $vnet --name pods --address-prefixes 10.241.0.0/16 -o none
 
 
 #create cluster
-az aks create -n $c -g $rg -l $l --node-count 2 --yes --vnet-subnet-id /subscriptions/$s/resourceGroups/$rg/providers/Microsoft.Network/virtualNetworks/$vnet/subnets/nat 
+az aks create -n $c -g $rg -l $l --node-count 2 --yes --network-plugin azure -s Standard_D2_v3 \
+ --vnet-subnet-id /subscriptions/$s/resourceGroups/$rg/providers/Microsoft.Network/virtualNetworks/$vnet/subnets/vms \
+ --pod-subnet-id /subscriptions/$s/resourceGroups/$rg/providers/Microsoft.Network/virtualNetworks/$vnet/subnets/pods \
+ --nodepool-labels foo=bar --node-count 1 --outbound-type userAssignedNATGateway 
 
+#Shove in goldpinger.
+az aks get-credentials -n $c -g $rg
