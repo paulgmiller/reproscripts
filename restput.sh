@@ -1,0 +1,2 @@
+APR=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourceGroups/paultest/providers/Microsoft.ContainerService/managedClusters/winputeast/agentpools/npwin
+az rest -u "https://management.azure.com$APR?api-version=2023-07-02-preview" --method PUT --body '{"properties":{"count":null,"vmSize":"","type":"","enableAutoScaling":false}}'

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-server
+  template:
+    metadata:
+      labels:
+        app: web-server
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-server-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: web-server

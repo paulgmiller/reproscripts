@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  annotations:
+    deprecated.daemonset.template.generation: "2"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"DaemonSet","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"kilo","app.kubernetes.io/part-of":"kilo"},"name":"kilo","namespace":"kube-system"},"spec":{"selector":{"matchLabels":{"app.kubernetes.io/name":"kilo","app.kubernetes.io/part-of":"kilo"}},"template":{"metadata":{"labels":{"app.kubernetes.io/name":"kilo","app.kubernetes.io/part-of":"kilo"}},"spec":{"containers":[{"args":["--kubeconfig=/etc/kubernetes/kubeconfig","--hostname=$(NODE_NAME)"],"env":[{"name":"NODE_NAME","valueFrom":{"fieldRef":{"fieldPath":"spec.nodeName"}}}],"image":"squat/kilo","name":"kilo","ports":[{"containerPort":1107,"name":"metrics"}],"securityContext":{"privileged":true},"volumeMounts":[{"mountPath":"/etc/cni/net.d","name":"cni-conf-dir"},{"mountPath":"/var/lib/kilo","name":"kilo-dir"},{"mountPath":"/etc/kubernetes","name":"kubeconfig","readOnly":true},{"mountPath":"/lib/modules","name":"lib-modules","readOnly":true},{"mountPath":"/run/xtables.lock","name":"xtables-lock","readOnly":false}]}],"hostNetwork":true,"initContainers":[{"command":["/bin/sh","-c","set -e -x; cp /opt/cni/bin/* /host/opt/cni/bin/; TMP_CONF=\"$CNI_CONF_NAME\".tmp; echo \"$CNI_NETWORK_CONFIG\" \u003e $TMP_CONF; rm -f /host/etc/cni/net.d/*; mv $TMP_CONF /host/etc/cni/net.d/$CNI_CONF_NAME"],"env":[{"name":"CNI_CONF_NAME","value":"10-kilo.conflist"},{"name":"CNI_NETWORK_CONFIG","valueFrom":{"configMapKeyRef":{"key":"cni-conf.json","name":"kilo"}}}],"image":"squat/kilo","name":"install-cni","volumeMounts":[{"mountPath":"/host/opt/cni/bin","name":"cni-bin-dir"},{"mountPath":"/host/etc/cni/net.d","name":"cni-conf-dir"}]}],"serviceAccountName":"kilo","tolerations":[{"effect":"NoSchedule","operator":"Exists"},{"effect":"NoExecute","operator":"Exists"}],"volumes":[{"hostPath":{"path":"/opt/cni/bin"},"name":"cni-bin-dir"},{"hostPath":{"path":"/etc/cni/net.d"},"name":"cni-conf-dir"},{"hostPath":{"path":"/var/lib/kilo"},"name":"kilo-dir"},{"configMap":{"items":[{"key":"kubeconfig.conf","path":"kubeconfig"}],"name":"kube-proxy"},"name":"kubeconfig"},{"hostPath":{"path":"/lib/modules"},"name":"lib-modules"},{"hostPath":{"path":"/run/xtables.lock","type":"FileOrCreate"},"name":"xtables-lock"}]}}}}
+  creationTimestamp: "2022-02-14T05:21:22Z"
+  generation: 2
+  labels:
+    app.kubernetes.io/name: kilo
+    app.kubernetes.io/part-of: kilo
+  name: kilo
+  namespace: kube-system
+  resourceVersion: "107114"
+  uid: 0d5beb38-f05f-4f4e-8108-acc8b6227b33
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kilo
+      app.kubernetes.io/part-of: kilo
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: kilo
+        app.kubernetes.io/part-of: kilo
+    spec:
+      containers:
+      - args:
+        - --hostname=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        image: squat/kilo
+        imagePullPolicy: Always
+        name: kilo
+        ports:
+        - containerPort: 1107
+          hostPort: 1107
+          name: metrics
+          protocol: TCP
+        resources: {}
+        securityContext:
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/cni/net.d
+          name: cni-conf-dir
+        - mountPath: /var/lib/kilo
+          name: kilo-dir
+        - mountPath: /lib/modules
+          name: lib-modules
+          readOnly: true
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - set -e -x; cp /opt/cni/bin/* /host/opt/cni/bin/; TMP_CONF="$CNI_CONF_NAME".tmp;
+          echo "$CNI_NETWORK_CONFIG" > $TMP_CONF; rm -f /host/etc/cni/net.d/*; mv
+          $TMP_CONF /host/etc/cni/net.d/$CNI_CONF_NAME
+        env:
+        - name: CNI_CONF_NAME
+          value: 10-kilo.conflist
+        - name: CNI_NETWORK_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              key: cni-conf.json
+              name: kilo
+        image: squat/kilo
+        imagePullPolicy: Always
+        name: install-cni
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /host/opt/cni/bin
+          name: cni-bin-dir
+        - mountPath: /host/etc/cni/net.d
+          name: cni-conf-dir
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: kilo
+      serviceAccountName: kilo
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /opt/cni/bin
+          type: ""
+        name: cni-bin-dir
+      - hostPath:
+          path: /etc/cni/net.d
+          type: ""
+        name: cni-conf-dir
+      - hostPath:
+          path: /var/lib/kilo
+          type: ""
+        name: kilo-dir
+      - hostPath:
+          path: /lib/modules
+          type: ""
+        name: lib-modules
+      - hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+        name: xtables-lock
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+status:
+  currentNumberScheduled: 3
+  desiredNumberScheduled: 3
+  numberAvailable: 3
+  numberMisscheduled: 0
+  numberReady: 3
+  observedGeneration: 2
+  updatedNumberScheduled: 3

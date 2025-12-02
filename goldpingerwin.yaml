@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goldpinger-win-deploy
+  namespace: default
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: goldpinger-win
+  template:
+    metadata:
+      labels:
+        app: goldpinger-win
+    spec:
+      serviceAccount: "goldpinger-serviceaccount"
+      nodeSelector:
+        "kubernetes.io/os": "windows"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: "app"
+                  operator: In
+                  values:
+                  - goldpinger
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: goldpinger
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8080"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: HOSTS_TO_RESOLVE
+              value: "1.1.1.1 8.8.8.8 www.bing.com"
+          image: "mcr.microsoft.com/aks/e2e/bloomberg-goldpinger-windows:3.9.0-windows-amd64"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 1m
+              memory: 40Mi
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: milvus
+    meta.helm.sh/release-namespace: milvus
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+  labels:
+      app.kubernetes.io/instance: milvus
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: milvus
+      app.kubernetes.io/version: 2.2.0
+      component: proxy
+      helm.sh/chart: milvus-3.3.0
+  name: milvus2
+  namespace: milvus
+spec:
+  externalTrafficPolicy: Local
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: milvus
+    port: 19530
+    targetPort: milvus
+  selector:
+    app.kubernetes.io/instance: milvus
+    app.kubernetes.io/name: milvus
+    component: proxy
+  sessionAffinity: None
+  type: LoadBalancer

@@ -1,0 +1,58 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: clearipam
+  namespace: kube-system
+  labels:
+    app: clearipam
+spec:
+  selector:
+    matchLabels:
+      name: clearipam
+  template:
+    metadata:
+      labels:
+        name: clearipam
+    spec:
+      hostPID: true
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+        - name: nsenter
+          image: alpine
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          command:
+            - nsenter
+            - --target
+            - "1"
+            - --mount
+            - --uts
+            - --ipc
+            - --net
+            - --pid
+            - --
+            - sh
+            - -c
+            - |
+              #! /bin/sh
+              set -ue
+              while true; do
+                if [ -d /var/lib/cni/networks/k8s-pod-network ]; then
+                  cd /var/lib/cni/networks/k8s-pod-network                                                                                                                                                                                 
+                  for podID in $(tail -n +1 * | egrep '^[A-Za-z0-9]{64,64}' | tr -d '\r'); do
+                    sleep 2
+                    if [ -z $(crictl pods --no-trunc| grep $podID | awk '{print $1}') ]; then
+                      podIP=$(grep -ilr $podID ./)
+                      if [ -z "${podIP}" ]; then
+                        continue
+                      fi
+                      echo "removing podIP=${podIP} for podID=${podID}"
+                      rm $podIP
+                    fi
+                  done
+                  #echo "check done $(date)"
+                fi
+              done

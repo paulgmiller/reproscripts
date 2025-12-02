@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: coredns2-pdb
+  namespace: kube-system
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      k8s-app: kube-dns

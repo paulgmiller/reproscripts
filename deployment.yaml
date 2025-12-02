@@ -1,0 +1,169 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "managedClusters_prefligthisajoke_name": {
+            "defaultValue": "prefligthisajoke",
+            "type": "String"
+        },
+        "publicIPAddresses_4e66c49f_cad9_430a_a32f_1d557d06b0d7_externalid": {
+            "defaultValue": "/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourceGroups/MC_paultest_prefligthisajoke_westus2/providers/Microsoft.Network/publicIPAddresses/4e66c49f-cad9-430a-a32f-1d557d06b0d7",
+            "type": "String"
+        },
+        "userAssignedIdentities_prefligthisajoke_agentpool_externalid": {
+            "defaultValue": "/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourceGroups/MC_paultest_prefligthisajoke_westus2/providers/Microsoft.ManagedIdentity/userAssignedIdentities/prefligthisajoke-agentpool",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.ContainerService/managedClusters",
+            "apiVersion": "2023-01-02-preview",
+            "name": "[parameters('managedClusters_prefligthisajoke_name')]",
+            "location": "westus2",
+            "sku": {
+                "name": "Basic",
+                "tier": "Free"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "kubernetesVersion": "1.24.9",
+                "dnsPrefix": "prefligthi-paultest-8ecadf",
+                "agentPoolProfiles": [
+                    {
+                        "name": "nodepool1",
+                        "count": 3,
+                        "vmSize": "Standard_DS2_v2",
+                        "osDiskSizeGB": 128,
+                        "osDiskType": "Managed",
+                        "kubeletDiskType": "OS",
+                        "workloadRuntime": "OCIContainer",
+                        "maxPods": 110,
+                        "type": "VirtualMachineScaleSets",
+                        "enableAutoScaling": false,
+                        "powerState": {
+                            "code": "Running"
+                        },
+                        "orchestratorVersion": "1.24.9",
+                        "enableNodePublicIP": false,
+                        "enableCustomCATrust": false,
+                        "mode": "System",
+                        "enableEncryptionAtHost": false,
+                        "enableUltraSSD": false,
+                        "osType": "Linux",
+                        "osSKU": "Ubuntu",
+                        "upgradeSettings": {},
+                        "enableFIPS": false,
+                        "networkProfile": {}
+                    }
+                ],
+                "linuxProfile": {
+                    "adminUsername": "azureuser",
+                    "ssh": {
+                        "publicKeys": [
+                            {
+                                "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC6L/Pi8jbW65kDFhuJdWkF//eT/DAkPXyZOqC/Mz907N+jiuaeyYF/ic5JeAEqcBhTqIU9vf7NK5YTDwgBvWo46ayrx+mBfUTPWFzNNAt55Lqy2wOvultp+//4OjnvU8d0o2Lwwxxr+fuiejHM8/Rjs36rAYyr6tMQix5x0Q09dprK4s93v/Lcu6ozOGVA368BLfq0cTEpjoOsAJRXuwgnOzXy3nWe2OLjs7GWZZmfxihXGe+mEogqxdkSpoHYavp7vHKHU5XrJsfuWll46UCGSCJgXiM4UzCQ5aPsDwGtXkGqL04NC+aQr/hSuSne0MN46JE1z3f8YtA0UeEQK+wuzRKOBstq2Kv9QMKML7M9sUfJBLtQIW2+6WQXkPDYgfS5PzdQyz2xiZfd7G7WP4JzqkrAf57yD0wbD+AaHpRS5Zo1QlSFFwc9S87ORTIbRM+GML1cXkMl6d3xxYsevvUIMm0KV0QHuEYipBFc/CfEUUZywEQKgyEtOY6y2csvqXE= pmiller@millercloud2\n"
+                            }
+                        ]
+                    }
+                },
+                "servicePrincipalProfile": {
+                    "clientId": "msi"
+                },
+                "nodeResourceGroup": "[concat('MC_paultest_', parameters('managedClusters_prefligthisajoke_name'), '_westus2')]",
+                "enableRBAC": true,
+                "enablePodSecurityPolicy": false,
+                "networkProfile": {
+                    "networkPlugin": "kubenet",
+                    "loadBalancerSku": "standard",
+                    "loadBalancerProfile": {
+                        "managedOutboundIPs": {
+                            "count": 1
+                        },
+                        "effectiveOutboundIPs": [
+                            {
+                                "id": "[parameters('publicIPAddresses_4e66c49f_cad9_430a_a32f_1d557d06b0d7_externalid')]"
+                            }
+                        ],
+                        "backendPoolType": "nodeIPConfiguration"
+                    },
+                    "podCidr": "10.244.0.0/16",
+                    "serviceCidr": "10.0.0.0/16",
+                    "dnsServiceIP": "10.0.0.10",
+                    "dockerBridgeCidr": "172.17.0.1/16",
+                    "outboundType": "loadBalancer",
+                    "podCidrs": [
+                        "10.244.0.0/16"
+                    ],
+                    "serviceCidrs": [
+                        "10.0.0.0/16"
+                    ],
+                    "ipFamilies": [
+                        "IPv4"
+                    ]
+                },
+                "identityProfile": {
+                    "kubeletidentity": {
+                        "resourceId": "[parameters('userAssignedIdentities_prefligthisajoke_agentpool_externalid')]",
+                        "clientId": "6dc2b616-33a7-4814-98c2-5509cd511b58",
+                        "objectId": "506c79b9-f616-4751-8040-dfd6b8d0cf3a"
+                    }
+                },
+                "disableLocalAccounts": false,
+                "securityProfile": {},
+                "storageProfile": {
+                    "diskCSIDriver": {
+                        "enabled": true,
+                        "version": "v1"
+                    },
+                    "fileCSIDriver": {
+                        "enabled": true
+                    },
+                    "snapshotController": {
+                        "enabled": true
+                    }
+                },
+                "oidcIssuerProfile": {
+                    "enabled": false
+                },
+                "workloadAutoScalerProfile": {}
+            }
+        },
+        {
+            "type": "Microsoft.ContainerService/managedClusters/agentPools",
+            "apiVersion": "2023-01-02-preview",
+            "name": "[concat(parameters('managedClusters_prefligthisajoke_name'), '/nodepool1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerService/managedClusters', parameters('managedClusters_prefligthisajoke_name'))]"
+            ],
+            "properties": {
+                "count": 5,
+                "vmSize": "Standard_DS2_v2",
+                "osDiskSizeGB": 128,
+                "osDiskType": "Managed",
+                "kubeletDiskType": "OS",
+                "workloadRuntime": "OCIContainer",
+                "maxPods": 110,
+                "type": "VirtualMachineScaleSets",
+                "enableAutoScaling": false,
+                "powerState": {
+                    "code": "Running"
+                },
+                "orchestratorVersion": "1.24.9",
+                "enableNodePublicIP": false,
+                "enableCustomCATrust": false,
+                "mode": "System",
+                "enableEncryptionAtHost": false,
+                "enableUltraSSD": false,
+                "osType": "Linux",
+                "osSKU": "Ubuntu",
+                "upgradeSettings": {},
+                "enableFIPS": false,
+                "networkProfile": {}
+            }
+        }
+    ]
+}

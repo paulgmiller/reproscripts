@@ -1,0 +1,225 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2023-05-21T20:51:44Z"
+  generateName: kube-proxy-
+  labels:
+    component: kube-proxy
+    controller-revision-hash: 7f4c765c49
+    pod-template-generation: "1"
+    tier: node
+  name: kube-proxy-xjmvk
+  namespace: kube-system
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: DaemonSet
+    name: kube-proxy
+    uid: 76bbde5b-7d0d-499b-a951-53d78246950d
+  resourceVersion: "901"
+  uid: 5293b0d3-fb4a-4fc2-bf57-c51146f7497a
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchFields:
+          - key: metadata.name
+            operator: In
+            values:
+            - aks-nodepool1-28242654-vmss000001
+  containers:
+  - command:
+    - kube-proxy
+    - --conntrack-max-per-core=0
+    - --metrics-bind-address=0.0.0.0:10249
+    - --kubeconfig=/var/lib/kubelet/kubeconfig
+    - --cluster-cidr=10.244.0.0/16
+    - --detect-local-mode=ClusterCIDR
+    - --pod-interface-name-prefix=
+    - --v=3
+    env:
+    - name: KUBERNETES_PORT_443_TCP_ADDR
+      value: probes-paultest-8ecadf-k2f2fcfk.hcp.westus2.azmk8s.io
+    - name: KUBERNETES_PORT
+      value: tcp://probes-paultest-8ecadf-k2f2fcfk.hcp.westus2.azmk8s.io:443
+    - name: KUBERNETES_PORT_443_TCP
+      value: tcp://probes-paultest-8ecadf-k2f2fcfk.hcp.westus2.azmk8s.io:443
+    - name: KUBERNETES_SERVICE_HOST
+      value: probes-paultest-8ecadf-k2f2fcfk.hcp.westus2.azmk8s.io
+    image: mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.25.6
+    imagePullPolicy: IfNotPresent
+    name: kube-proxy
+    resources:
+      requests:
+        cpu: 100m
+    securityContext:
+      privileged: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/lib/kubelet
+      name: kubeconfig
+      readOnly: true
+    - mountPath: /etc/kubernetes/certs
+      name: certificates
+      readOnly: true
+    - mountPath: /run/xtables.lock
+      name: iptableslock
+    - mountPath: /lib/modules
+      name: modules
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-gvhpc
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  hostNetwork: true
+  initContainers:
+  - command:
+    - /bin/sh
+    - -c
+    - |
+      SYSCTL=/proc/sys/net/netfilter/nf_conntrack_max
+      echo "Current net.netfilter.nf_conntrack_max: $(cat $SYSCTL)"
+      DESIRED=$(awk -F= '/net.netfilter.nf_conntrack_max/ {print $2}' /etc/sysctl.d/999-sysctl-aks.conf)
+      if [ -z "$DESIRED" ]; then
+        DESIRED=$((32768*$(nproc)))
+        if [ $DESIRED -lt 131072 ]; then
+          DESIRED=131072
+        fi
+
+        echo "AKS custom config for net.netfilter.nf_conntrack_max not set."
+        echo "Setting nf_conntrack_max to $DESIRED (32768 * $(nproc) cores, minimum 131072)."
+        echo $DESIRED > $SYSCTL
+      else
+        echo "AKS custom config for net.netfilter.nf_conntrack_max set to $DESIRED."
+        echo "Setting nf_conntrack_max to $DESIRED."
+        echo $DESIRED > $SYSCTL
+      fi
+    image: mcr.microsoft.com/mirror/docker/library/busybox:1.35
+    imagePullPolicy: IfNotPresent
+    name: kube-proxy-bootstrap
+    resources:
+      requests:
+        cpu: 100m
+    securityContext:
+      privileged: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /etc/sysctl.d
+      name: sysctls
+    - mountPath: /lib/modules
+      name: modules
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-gvhpc
+      readOnly: true
+  nodeName: aks-nodepool1-28242654-vmss000001
+  preemptionPolicy: PreemptLowerPriority
+  priority: 2000001000
+  priorityClassName: system-node-critical
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: kube-proxy
+  serviceAccountName: kube-proxy
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+  - effect: NoSchedule
+    operator: Exists
+  volumes:
+  - hostPath:
+      path: /var/lib/kubelet
+      type: ""
+    name: kubeconfig
+  - hostPath:
+      path: /etc/kubernetes/certs
+      type: ""
+    name: certificates
+  - hostPath:
+      path: /run/xtables.lock
+      type: FileOrCreate
+    name: iptableslock
+  - hostPath:
+      path: /etc/sysctl.d
+      type: Directory
+    name: sysctls
+  - hostPath:
+      path: /lib/modules
+      type: Directory
+    name: modules
+  - name: kube-api-access-gvhpc
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2023-05-21T20:51:57Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2023-05-21T20:52:02Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2023-05-21T20:52:02Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2023-05-21T20:51:44Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://017a703ce59ebe91670044afbf74ed3155ec9ccb3d1e2d59c6a88f948b89f5b6
+    image: mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.25.6
+    imageID: mcr.microsoft.com/oss/kubernetes/kube-proxy@sha256:b48f7189b854fd32898f3b8d7c228aaf9e761f4d6656dd5df1fe2eaaf8d39905
+    lastState: {}
+    name: kube-proxy
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2023-05-21T20:52:01Z"
+  hostIP: 10.224.0.6
+  initContainerStatuses:
+  - containerID: containerd://28ce9e60e175aa8e0bce9c737bb2400d20fe88aad530674c1ddea14083f45b9f
+    image: mcr.microsoft.com/mirror/docker/library/busybox:1.35
+    imageID: mcr.microsoft.com/mirror/docker/library/busybox@sha256:b4e4a06de46acc0958cd93e2eeb769077d255f06a7c3a91196509c16b7bc989e
+    lastState: {}
+    name: kube-proxy-bootstrap
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: containerd://28ce9e60e175aa8e0bce9c737bb2400d20fe88aad530674c1ddea14083f45b9f
+        exitCode: 0
+        finishedAt: "2023-05-21T20:51:56Z"
+        reason: Completed
+        startedAt: "2023-05-21T20:51:56Z"
+  phase: Running
+  podIP: 10.224.0.6
+  podIPs:
+  - ip: 10.224.0.6
+  qosClass: Burstable
+  startTime: "2023-05-21T20:51:45Z"

@@ -1,0 +1,39 @@
+# Azureconfig.yaml provides the azure resource config we're using,
+# in most case, we'll use the E2E sub, which is managed by Azure with resource
+# recycling and support internal features.
+# We can also use any sub/client settings we want.
+configVersion: v20200224
+azure:
+  # Required: the environment for the e2e tests. Possible value: test/prod.
+  # When running in prod env, test runner will skip rp proxy related settings.
+  # When running in test env, test runner will detect rp proxy related settings automatically.
+  # Please refer to the doc for the full description of this field.
+  e2e_environment: 'test'
+
+  # Required: the subscription id for the managed cluster (a.k.a customer subscription)
+  managed_cluster_subscription: '8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8'
+  # Required: tenant id for the test
+  client_tenant_id: '72f988bf-86f1-41af-91ab-2d7cd011db47'
+  # Required: azure service region/location for the test
+  location: 'westus2'
+  # Optional: the subscription id for the underlay clusters (a.k.a rp subscription),
+  #           the value can be found in the pipeline build (usually AKS_E2E_SUBSCRIPTION_ID)
+  underlay_subscription: '8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8'
+
+  # client_id and client_secret are the optional service principal configuration
+  # for the test. If anyone of them is empty or missing, test runner will use
+  # azure-cli(az) to create the sp credential.
+  # Optional: service principal client id for the test
+  # client_id: app-client-id
+  # Optional: service principal client secret for the test
+  # client_secret: supersecret
+
+  # Build version/mode specifies the test AKS service we're using.
+  # When these two configs are enabled, the e2e runner will connect the test
+  # service via RP proxy.
+  # Optional: build version string for the test, can obtain from the pipeline
+  build_version: 'pmillerebld50993858'
+  # Optional: build mode for the test, possible value: standalone/shared
+  build_mode: 'standalone'
+
+

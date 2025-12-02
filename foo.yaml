@@ -1,0 +1,35 @@
+apiVersion: v1
+data:
+  cns_config.json: |
+    {
+      "TelemetrySettings": {
+          "TelemetryBatchSizeBytes": 16384,
+          "TelemetryBatchIntervalInSecs": 15,
+          "RefreshIntervalInSecs": 15,
+          "DisableAll": false,
+          "HeartBeatIntervalInMins": 30,
+          "DebugMode": false,
+          "SnapshotIntervalInMins": 60
+      },
+      "ManagedSettings": {
+          "PrivateEndpoint": "",
+          "InfrastructureNetworkID": "",
+          "NodeID": "",
+          "NodeSyncIntervalInSeconds": 30
+      },
+      "ChannelMode": "CRD",
+      "InitializeFromCNI": true,
+      "MetricsBindAddress": ":10091"
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"cns_config.json":"{\n  \"TelemetrySettings\": {\n      \"TelemetryBatchSizeBytes\": 16384,\n      \"TelemetryBatchIntervalInSecs\": 15,\n      \"RefreshIntervalInSecs\": 15,\n      \"DisableAll\": false,\n      \"HeartBeatIntervalInMins\": 30,\n      \"DebugMode\": false,\n      \"SnapshotIntervalInMins\": 60\n  },\n  \"ManagedSettings\": {\n      \"PrivateEndpoint\": \"\",\n      \"InfrastructureNetworkID\": \"\",\n      \"NodeID\": \"\",\n      \"NodeSyncIntervalInSeconds\": 30\n  },\n  \"ChannelMode\": \"CRD\",\n  \"InitializeFromCNI\": true\n}\n"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"addonmanager.kubernetes.io/mode":"Reconcile"},"name":"cns-config","namespace":"kube-system"}}
+  creationTimestamp: "2022-02-16T01:00:14Z"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: cns-config2
+  namespace: kube-system
+  resourceVersion: "11918"
+  uid: 6857fb61-481c-4994-a72c-5910d587caca

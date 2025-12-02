@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: set-upgrade-daemon
+  namespace: kube-system
+  labels:
+    app: set-upgrade-daemon
+spec:
+  selector:
+    matchLabels:
+      app: set-upgrade-daemon
+  template:
+    metadata:
+      labels:
+        app: set-upgrade-daemon
+    spec:
+      containers:
+        - name: set-upgrade-daemon
+          securityContext:
+            privileged: true
+          image: mcr.microsoft.com/mirror/docker/library/ubuntu:22.04
+          imagePullPolicy: Always
+          command:
+          - /bin/sh
+          - -c
+          - |
+            if [ ! -f /etc/apt/apt.conf.d/20auto-upgrade ]; then
+              echo "no 20auto-upgrade exists"
+              sleep 10000000
+            fi
+
+            if [ ! -f /etc/cni/net.d/10-azure.conflist ]; then
+              echo "not on azure cni v1 / podsubnet"
+              sleep 10000000
+            fi
+            
+
+            if [ -f /opt/azure/uu.disabled ]; then
+              # skip if unattended upgrades is already disabled
+              echo "uu.disabled exists"
+              sleep 10000000
+            fi
+
+            build_date="$(date -d "$(grep -oP 'VSTS Build NUMBER: \K[^.]+' /opt/azure/vhd-install.complete)" "+%s")"
+            echo $build_date
+            if [ "${build_date}" -gt "$(date -d "20230901" "+%s")" ]; then
+                echo "skip if node image build date is after 2023-09-01"
+                sleep 10000000
+            fi 
+           
+            if grep 'Unattended-Upgrade "1"' /etc/apt/apt.conf.d/20auto-upgrades &> /dev/null; then
+              echo "Disabling unattended upgrades"
+              sed -i 's/Update-Package-Lists "1"/Update-Package-Lists "0"/ ; s/Unattended-Upgrade "1"/Unattended-Upgrade "0"/' /etc/apt/apt.conf.d/20auto-upgrades
+            fi
+
+            if dpkg -l | grep linux-azure | grep 6.2.0.1009 > /dev/null; then
+                echo "Purging linux-azure 6.2 packages"
+                # shellcheck disable=SC2046
+                DEBIAN_FRONTEND=noninteractive apt -y purge $(dpkg -l | awk '$2 ~ /linux.*azure/ && $3 ~ /^6\.2\.0.1009/ { print $2; }') &> /dev/null
+            fi
+            touch /opt/azure/uu.disabled
+            
+            echo "OK"
+            sleep 10000000
+          
+          volumeMounts:
+          - mountPath: /etc/apt/apt.conf.d/
+            name: upgradeconfig
+            readOnly: false
+          - mountPath: /opt/azure
+            name: optazure
+            readOnly: false
+      terminationGracePeriodSeconds: 1 #sleep 1000000 does not respect the interrupt signal 
+      volumes:  
+      - name: upgradeconfig
+        hostPath:
+          path: /etc/apt/apt.conf.d/
+          type: DirectoryOrCreate
+      - name: optazure
+        hostPath:
+          path: /opt/azure/
+          type: Directory
