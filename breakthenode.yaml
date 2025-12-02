@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lock-one-node-inbound
+  namespace: kube-system
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: lock-one-node-inbound
+  template:
+    metadata:
+      labels:
+        app: lock-one-node-inbound
+    spec:
+      # This makes the pod share the node's network namespace
+      hostNetwork: true
+      hostPID: true
+      # Schedule like any other workload; you can add nodeSelector/tolerations if needed
+      containers:
+        - name: lock-one-node-inbound
+          image: alpine:3.20
+          securityContext:
+            privileged: true
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eux
+
+              # Install tools
+              apk add --no-cache iptables util-linux
+
+              # Jump into host netns (PID 1 on the host)
+              nsenter -t 1 -n sh -c '
+                # Allow loopback if not already present
+                iptables -C INPUT -i lo -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -i lo -j ACCEPT
+
+                # Allow replies to outbound connections (kubelet → apiserver, etc.)
+                iptables -C INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT 2>/dev/null || \
+                  iptables -I INPUT 2 -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+                # Default-deny all other inbound
+                iptables -P INPUT DROP
+              '
+
+              # Keep pod alive
+              sleep 365d
+      restartPolicy: Always
